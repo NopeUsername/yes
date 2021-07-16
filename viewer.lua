@@ -9582,13 +9582,7 @@ function InstanceView:init()
 		table.insert(currentInstances, CreateInstanceViewElement(self, child))
 		
 		self:setState({
-			isOpen = false
-		})
-		self:setState({
 			instaces = currentInstances
-		})
-		self:setState({
-			isOpen = openStatus
 		})
 	end)
 	self.props.object.ChildRemoved:Connect(function(child)
@@ -9603,13 +9597,7 @@ function InstanceView:init()
 		end
 		
 		self:setState({
-			isOpen = false
-		})
-		self:setState({
 			instaces = currentInstances
-		})
-		self:setState({
-			isOpen = openStatus
 		})
 	end)
 	self.props.object:GetPropertyChangedSignal("Name"):Connect(function()
@@ -9666,7 +9654,7 @@ function InstanceView:render()
 	}
 	if self.state.isOpen then
 		for _, v in ipairs(self.state.instances) do
-			table.insert(itemsChildren, v)
+			itemsChildren[v.props.object:GetDebugId()] = v
 		end
 	end
 	
@@ -10070,6 +10058,30 @@ function ScrollFrame:init()
 end
 
 function ScrollFrame:render()
+	local children = {
+		Padding = Roact.createElement("UIPadding", {
+			PaddingLeft = UDim.new(0, 5),
+			PaddingRight = UDim.new(0, 5),
+			PaddingTop = UDim.new(0, 5),
+			PaddingBottom = UDim.new(0, 5)
+		}),
+		ListLayout = Roact.createElement("UIListLayout", {
+			Padding = UDim.new(0, 3),
+			[Roact.Change.AbsoluteContentSize] = function(rbx)
+				local numInstances = #self.state.instances
+				local totalPadding = 3 * numInstances
+
+				self:setState({
+					contentHeight = rbx.AbsoluteContentSize.Y + (16 * 0.4)
+				})
+			end
+		})
+	}
+	for _, v in ipairs(self.state.instances) do
+		children[v.props.object:GetDebugId()] = v
+	end
+	
+	
 	return Roact.createElement("Frame", {
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 1, 0),
@@ -10083,26 +10095,7 @@ function ScrollFrame:render()
 			CanvasSize = UDim2.new(0, 0, 0, self.state.contentHeight),
 			ScrollBarThickness = 16,
 			BorderSizePixel = 0,
-		}, {
-			Padding = Roact.createElement("UIPadding", {
-				PaddingLeft = UDim.new(0, 5),
-				PaddingRight = UDim.new(0, 5),
-				PaddingTop = UDim.new(0, 5),
-				PaddingBottom = UDim.new(0, 5)
-			}),
-			ListLayout = Roact.createElement("UIListLayout", {
-				Padding = UDim.new(0, 3),
-				[Roact.Change.AbsoluteContentSize] = function(rbx)
-					local numInstances = #self.state.instances
-					local totalPadding = 3 * numInstances
-
-					self:setState({
-						contentHeight = rbx.AbsoluteContentSize.Y + (16 * 0.4)
-					})
-				end
-			}),
-			table.unpack(self.state.instances)
-		}),
+		}, children),
 		Roact.createElement(ScrollBar, {
 			boundFrame = self.scrollingFrameRef:getValue()
 		}),
