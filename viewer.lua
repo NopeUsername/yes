@@ -9617,7 +9617,9 @@ function InstanceView:init()
 	
 	
 	
-
+	
+	self.lastClicked = os.clock()
+	
 	self:setState({
 		instances = components,
 		contentHeight = 0,
@@ -9703,6 +9705,18 @@ function InstanceView:render()
 			[Roact.Event.InputBegan] = function(rbx, input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
 					self.props.updateSelectedObject(self)
+					
+					if (os.clock() - self.lastClicked <= 0.5) then
+						self.lastDoubleClicked = os.clock()
+						
+						self:setState(function(oldState)
+							return {
+								isOpen = not oldState.isOpen
+							}
+						end)
+					end
+					
+					self.lastClicked = os.clock()
 				end
 			end,
 		}, {
@@ -10215,9 +10229,6 @@ function Properties:render()
 		Position = self.props.Position or UDim2.new(1, 0, 1, 0),
 		Size = self.props.Size or UDim2.new(0, 350, 0.5, 0),
 	}, {
-		Roact.createElement(ScrollBar, {
-			boundFrame = self.scrollingFrameRef:getValue()
-		}),
 		Roact.createElement("ScrollingFrame", {
 			[Roact.Ref] = self.scrollingFrameRef,
 			
@@ -10229,7 +10240,10 @@ function Properties:render()
 			ZIndex = 0,
 			ScrollBarThickness = 16,
 			ScrollingDirection = Enum.ScrollingDirection.Y
-		}, children)
+		}, children),
+		Roact.createElement(ScrollBar, {
+			boundFrame = self.scrollingFrameRef:getValue()
+		}),
 	})
 end
 
@@ -10358,7 +10372,6 @@ function CollapsibleItem:init()
 		value = self.props.value,
 		rawValue = self.props.rawValue
 	})
-	
 	
 	local object = self.props.object
 	
